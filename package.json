@@ -137,7 +137,7 @@
 		"remark-gfm": "4.0.1",
 		"remark-stringify": "11.0.0",
 		"rulesync": "7.27.1",
-		"sharp": "0.34.5",
+		"sharp": "0.35.0",
 		"solarflare-theme": "0.0.6",
 		"space-separated-tokens": "2.0.2",
 		"starlight-image-zoom": "0.14.1",
