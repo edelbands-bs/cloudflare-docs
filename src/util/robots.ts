@@ -8,27 +8,27 @@ import { join } from "node:path";
  * Only `User-agent: *` blocks are considered. Blank `Disallow` entries
  * (which re-allow everything) are ignored.
  */
-function parseDisallowedPaths(): string[] {
-	const robotsTxt = readFileSync(
-		join(process.cwd(), "public", "robots.txt"),
-		"utf-8",
-	);
-
+export function parseDisallowedPaths(robotsTxt: string): string[] {
 	const disallowed: string[] = [];
-	let inWildcardBlock = false;
+	let isWildcardGroup = false;
+	let readingUserAgents = false;
 
 	for (const rawLine of robotsTxt.split("\n")) {
-		const line = rawLine.trim();
+		const line = rawLine.split("#", 1)[0].trim();
 
-		if (line.startsWith("#") || line === "") continue;
+		if (line === "") continue;
 
 		if (line.toLowerCase().startsWith("user-agent:")) {
 			const agent = line.slice("user-agent:".length).trim();
-			inWildcardBlock = agent === "*";
+			if (!readingUserAgents) isWildcardGroup = false;
+			isWildcardGroup ||= agent === "*";
+			readingUserAgents = true;
 			continue;
 		}
 
-		if (!inWildcardBlock) continue;
+		readingUserAgents = false;
+
+		if (!isWildcardGroup) continue;
 
 		if (line.toLowerCase().startsWith("disallow:")) {
 			const path = line.slice("disallow:".length).split("#")[0].trim();
@@ -40,7 +40,9 @@ function parseDisallowedPaths(): string[] {
 }
 
 // Evaluated once at build time.
-const DISALLOWED_PATHS = parseDisallowedPaths();
+const DISALLOWED_PATHS = parseDisallowedPaths(
+	readFileSync(join(process.cwd(), "public", "robots.txt"), "utf-8"),
+);
 
 /**
  * Returns `true` if the given URL path is disallowed by `robots.txt`.
